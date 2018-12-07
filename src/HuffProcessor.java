@@ -42,14 +42,6 @@ public class HuffProcessor {
 	 *            Buffered bit stream writing to the output file.
 	 */
 	public void compress(BitInputStream in, BitOutputStream out){
-
-//		while (true){
-//			int val = in.readBits(BITS_PER_WORD);
-//			if (val == -1) break;
-//			out.writeBits(BITS_PER_WORD, val);
-//		}
-//		out.close();
-		
 		int[] counts = readForCounts(in);
 		HuffNode root = makeTreeFromCounts(counts);
 		String[] codings = makeCodingsFromTree(root);
@@ -62,6 +54,11 @@ public class HuffProcessor {
 		out.close();
 	}
 	
+	/**
+	 * Creates a frequency table for the characters in the file to be compressed.
+	 * @param input the file to be compressed
+	 * @return a table that contains each character's frequency
+	 */
 	private int[] readForCounts(BitInputStream input) {
 		int[] freq = new int[ALPH_SIZE + 1];
 		while(true) {
@@ -74,6 +71,11 @@ public class HuffProcessor {
 		}
 	}
 	
+	/**
+	 * Creates a greedy tree to create character encodings.
+	 * @param counts a table that maps characters to their frequency
+	 * @return a greedy tree that allows the trace of character encodings
+	 */
 	private HuffNode makeTreeFromCounts(int[] counts) {
 		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 		for(int i = 0; i < counts.length; i++) {
@@ -90,12 +92,19 @@ public class HuffProcessor {
 		return pq.remove();
 	}
 	
+	/**
+	 * Generates the character encodings from the tree
+	 * @param root the root of the tree to be encoded
+	 * @return a table of characters mapped to their encoding
+	 */
 	private String[] makeCodingsFromTree(HuffNode root) {
 		String[] encodings = new String[ALPH_SIZE + 1];
 		codingHelper(root, "", encodings);
 		return encodings;
 	}
 	
+	// Used for makeCodingsFromTree - recursively searches tree to
+	// generate encodings
 	private void codingHelper(HuffNode root, String path, String[] encodings) {
 		if(root.myLeft == null && root.myRight == null) {
 			encodings[root.myValue] = path;
@@ -105,7 +114,11 @@ public class HuffProcessor {
 		codingHelper(root.myRight, path + "1", encodings);
 	}
 
-	
+	/**
+	 * Passes the tree to the compressed file
+	 * @param root the root of the tree to put in the compressed file
+	 * @param out the compressed file output
+	 */
 	private void writeHeader(HuffNode root, BitOutputStream out) {
 		if(root == null) return;
 		if(root.myLeft == null && root.myRight == null) {
@@ -119,6 +132,12 @@ public class HuffProcessor {
 		}
 	}
 	
+	/**
+	 * Creates a compressed version of the input file by using the character encodings
+	 * @param codings the table that maps characters to their respective encodings
+	 * @param in the input file to be compressed
+	 * @param out the output file to write the compressed file to
+	 */
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
 		for(int i = 0; i < codings.length; i++) {
 			System.out.println(i + ": " + codings[i]);
@@ -145,14 +164,6 @@ public class HuffProcessor {
 	 *            Buffered bit stream writing to the output file.
 	 */
 	public void decompress(BitInputStream in, BitOutputStream out){
-
-//		while (true){
-//			int val = in.readBits(BITS_PER_WORD);
-//			if (val == -1) break;
-//			out.writeBits(BITS_PER_WORD, val);
-//		}
-//		out.close();
-		
 		int bits = in.readBits(BITS_PER_INT);
 		if(bits != HUFF_TREE) {
 			throw new HuffException("illegal header starts with "+bits);
@@ -163,6 +174,11 @@ public class HuffProcessor {
 		out.close();
 	}
 	
+	/**
+	 * Rebuilds tree from compressed file by reading in header
+	 * @param in the compressed file
+	 * @return the root of the tree used to decode the compressed file
+	 */
 	private HuffNode readTreeHeader(BitInputStream in) {
 		int bit = in.readBits(1);
 		if(bit == -1) {
@@ -180,6 +196,13 @@ public class HuffProcessor {
 		}
 	}
 	
+	/**
+	 * Decodes the compressed file's bits using the tree root and writes the
+	 * decoded version of in to out
+	 * @param root the root of the tree used to decode the input file
+	 * @param in the input file, which is compressed
+	 * @param out the output file, which is decompressed
+	 */
 	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
 		HuffNode current = root;
 		while(true) {
