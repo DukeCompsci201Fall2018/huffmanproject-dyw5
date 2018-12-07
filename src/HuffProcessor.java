@@ -138,11 +138,7 @@ public class HuffProcessor {
 	 * @param in the input file to be compressed
 	 * @param out the output file to write the compressed file to
 	 */
-	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
-		for(int i = 0; i < codings.length; i++) {
-			System.out.println(i + ": " + codings[i]);
-		}
-		
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {		
 		while(true) {
 			int val = in.readBits(BITS_PER_WORD);
 			if(val == -1) break;
